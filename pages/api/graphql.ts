@@ -1,5 +1,6 @@
 import { createYoga, createSchema } from 'graphql-yoga'
 import { IResolvers } from '@graphql-tools/utils'
+import mysql from 'serverless-mysql'
 
 const typeDefs = /* GraphQL */ `
     enum TaskStatus {
@@ -35,9 +36,14 @@ const typeDefs = /* GraphQL */ `
     }
 `
 
-const resolvers: IResolvers = {
+const resolvers: IResolvers<any, IApolloContext> = {
     Query: {
-        tasks(parent, args, context) {
+        async tasks(parent, args, context) {
+            const result = await context.db.query(
+                'SELECT "HELLO WORLD" as hello_world'
+            )
+            await db.end()
+            console.log('🚀 ~ file: graphql.ts:45 ~ result:', { result })
             return []
         },
         task(parent, args, context) {
@@ -56,6 +62,19 @@ const resolvers: IResolvers = {
         },
     },
 }
+
+interface IApolloContext {
+    db: mysql.ServerlessMysql
+}
+
+const db = mysql({
+    config: {
+        host: process.env.MYSQL_HOST,
+        user: process.env.MYSQL_USER,
+        database: process.env.MYSQL_DATABASE,
+        password: process.env.MYSQL_PASSWORD,
+    },
+})
 
 const schema = createSchema({
     typeDefs,
