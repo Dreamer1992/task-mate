@@ -1,42 +1,76 @@
-import { ApolloServer } from '@apollo/server'
-import { startStandaloneServer } from '@apollo/server/standalone'
+import { createYoga, createSchema } from 'graphql-yoga'
+import { IResolvers } from '@graphql-tools/utils'
 
-// схема - это коллекция типов (`typeDefs`),
-// которые определяют "форму" выполняемых запросов
-const typeDefs = `#graphql
-	type Book {
-		title: String
-		author: String
-	}
-  
-	type Query {
-		books: [Book]
-	}
+const typeDefs = /* GraphQL */ `
+    enum TaskStatus {
+        active
+        completed
+    }
+
+    type Task {
+        id: Int!
+        title: String!
+        status: TaskStatus!
+    }
+
+    input CreateTaskInput {
+        title: String!
+    }
+
+    input UpdateTaskInput {
+        id: Int!
+        title: String
+        status: TaskStatus
+    }
+
+    type Query {
+        tasks(status: TaskStatus): [Task!]!
+        task(id: Int!): Task
+    }
+
+    type Mutation {
+        createTask(input: CreateTaskInput!): Task
+        updateTask(input: UpdateTaskInput!): Task
+        deleteTask(id: Int!): Task
+    }
 `
 
-const books = [
-    {
-        title: 'The Awakening',
-        author: 'Kate Chopin',
-    },
-    {
-        title: 'City of Glass',
-        author: 'Paul Auster',
-    },
-]
-
-// Резолверы определяют способ получения типов, определенных в схеме.
-const resolvers = {
+const resolvers: IResolvers = {
     Query: {
-        books: () => books,
+        tasks(parent, args, context) {
+            return []
+        },
+        task(parent, args, context) {
+            return null
+        },
+    },
+    Mutation: {
+        createTask(parent, args, context) {
+            return null
+        },
+        updateTask(parent, args, context) {
+            return null
+        },
+        deleteTask(parent, args, context) {
+            return null
+        },
     },
 }
 
-const server = new ApolloServer({
+const schema = createSchema({
     typeDefs,
     resolvers,
 })
 
-// @ts-ignore
-const { url } = await startStandaloneServer(server)
-console.log(`🚀 Server listening at: ${url}`)
+export const config = {
+    api: {
+        // Disable body parsing (required for file uploads)
+        bodyParser: false,
+    },
+}
+
+export default createYoga({
+    schema,
+    // Needed to be defined explicitly because our endpoint lives at a different path other than `/graphql`
+    graphqlEndpoint: '/api/graphql',
+})
